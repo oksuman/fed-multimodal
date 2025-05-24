@@ -29,14 +29,14 @@ git clone git@github.com:usc-sail/fed-multimodal.git
 ```
 
 To install the conda environment:
-```
+```bash
 cd fed-multimodal
 conda create --name fed-multimodal python=3.9
 conda activate fed-multimodal
 ```
 
 Then pip install the package:
-```
+```bash
 pip install -e .
 ```
 
@@ -56,7 +56,7 @@ Here we provide an example to quickly start with the experiments, and reproduce 
 
 You can modify the data path in system.cfg to the desired path.
 
-```
+```bash
 cd fed_multimodal/data
 bash download_uci_har.sh
 cd ..
@@ -66,7 +66,7 @@ cd ..
 
 alpha specifies the non-iidness of the partition, the lower, the higher data heterogeneity. As each subject performs the same amount activities, we partition each subject data into 5 sub-clients.
 
-```
+```bash
 python3 features/data_partitioning/uci-har/data_partition.py --alpha 0.1 --num_clients 5
 python3 features/data_partitioning/uci-har/data_partition.py --alpha 5.0 --num_clients 5
 ```
@@ -77,7 +77,7 @@ The return data is a list, each item containing [key, file_name, label]
 
 For UCI-HAR dataset, the feature extraction mainly handles normalization.
 
-```
+```bash
 python3 features/feature_processing/uci-har/extract_feature.py --alpha 0.1
 python3 features/feature_processing/uci-har/extract_feature.py --alpha 5.0
 ```
@@ -87,7 +87,7 @@ python3 features/feature_processing/uci-har/extract_feature.py --alpha 5.0
 
 default missing modality simulation returns missing modality at 10%, 20%, 30%, 40%, 50%
 
-```
+```bash
 cd features/simulation_features/uci-har
 # output/mm/ucihar/{client_id}_{mm_rate}.json
 
@@ -101,13 +101,13 @@ The return data is a list, each item containing:
 missing_modalityA and missing_modalityB indicates the flag of missing modality, new_label indicates erroneous label, and missing label indicates if the label is missing for a data.
 
 #### 4. Run base experiments (FedAvg, FedOpt, FedProx, ...)
-```
+```bash
 cd experiment/uci-har
 bash run_base.sh
 ```
 
 #### 5. Run ablation experiments, e.g Missing Modality
-```
+```bash
 cd experiment/uci-har
 bash run_mm.sh
 ```
@@ -118,8 +118,7 @@ Dataset | Modality | Paper | Label Size | Num. of Clients | Split | Alpha | FL A
 UCI-HAR | Acc+Gyro | [UCI-Data](https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones) | 6 | 105 | Natural+Manual | 5.0 <br> 5.0 <br> 0.1 <br> 0.1 |  FedAvg <br> FedOpt <br> FedAvg <br> FedOpt | 77.74% <br> 85.17% <br> 76.66% <br> 79.80% | 0.05 | 200 |
 
 
-
-Feel free to contact us or open issue!
+Feel free to contact us or open an issue!
 
 Corresponding Author: Tiantian Feng, University of Southern California
 
@@ -128,10 +127,11 @@ Email: tiantiaf@usc.edu
 ### Related Citation
 
 ```
-@article{feng2023fedmultimodal,
-  title={FedMultimodal: A Benchmark For Multimodal Federated Learning},
+@inproceedings{feng2023fedmultimodal,
+  title={Fedmultimodal: A benchmark for multimodal federated learning},
   author={Feng, Tiantian and Bose, Digbalay and Zhang, Tuo and Hebbar, Rajat and Ramakrishna, Anil and Gupta, Rahul and Zhang, Mi and Avestimehr, Salman and Narayanan, Shrikanth},
-  journal={arXiv preprint arXiv:2306.09486},
+  booktitle={Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+  pages={4035--4045},
   year={2023}
 }
 ```
