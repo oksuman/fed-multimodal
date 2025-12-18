@@ -62,37 +62,43 @@ class ClientFedAvg(object):
 
         # initialize eval
         self.eval = EvalMetric(self.multilabel)
-        
+
+        # ✅ 핵심: trainable params만 optimizer / clip에 사용
+        trainable_params = [p for p in self.model.parameters() if p.requires_grad]
+
         # optimizer
         if self.args.fed_alg in ['fed_avg', 'fed_opt']:
             optimizer = torch.optim.SGD(
-                self.model.parameters(), 
+                trainable_params,
                 lr=self.args.learning_rate,
                 momentum=0.9,
                 weight_decay=1e-5
             )
         else:
             optimizer = FedProxOptimizer(
-                self.model.parameters(), 
+                trainable_params,
                 lr=self.args.learning_rate,
                 momentum=0.9,
                 weight_decay=1e-5,
                 mu=self.args.mu
             )
-            
+
         # last global model
         last_global_model = copy.deepcopy(self.model)
-        
+
         for iter in range(int(self.args.local_epochs)):
             for batch_idx, batch_data in enumerate(self.dataloader):
-                if self.args.dataset == 'extrasensory' and batch_idx > 20: continue
+                if self.args.dataset == 'extrasensory' and batch_idx > 20:
+                    continue
+
                 self.model.zero_grad()
                 optimizer.zero_grad()
+
                 if self.args.modality == "multimodal":
                     x_a, x_b, l_a, l_b, y = batch_data
                     x_a, x_b, y = x_a.to(self.device), x_b.to(self.device), y.to(self.device)
                     l_a, l_b = l_a.to(self.device), l_b.to(self.device)
-                    
+
                     # forward
                     outputs, _ = self.model(
                         x_a.float(), x_b.float(), l_a, l_b
@@ -100,44 +106,33 @@ class ClientFedAvg(object):
                 else:
                     x, l, y = batch_data
                     x, l, y = x.to(self.device), l.to(self.device), y.to(self.device)
-                    
+
                     # forward
                     outputs, _ = self.model(
                         x.float(), l
                     )
-                
-                if not self.multilabel: 
+
+                if not self.multilabel:
                     outputs = torch.log_softmax(outputs, dim=1)
-                    
-                # backward
-                loss = self.criterion(outputs, y)
 
                 # backward
+                loss = self.criterion(outputs, y)
                 loss.backward()
-                
+
                 # clip gradients
-                torch.nn.utils.clip_grad_norm_(
-                    self.model.parameters(), 
-                    10.0
-                )
+                torch.nn.utils.clip_grad_norm_(trainable_params, 10.0)
+
                 optimizer.step()
-                
+
                 # save results
-                if not self.multilabel: 
-                    self.eval.append_classification_results(
-                        y, 
-                        outputs, 
-                        loss
-                    )
+                if not self.multilabel:
+                    self.eval.append_classification_results(y, outputs, loss)
                 else:
-                    self.eval.append_multilabel_results(
-                        y, 
-                        outputs, 
-                        loss
-                    )
-                
+                    self.eval.append_multilabel_results(y, outputs, loss)
+
         # epoch train results
         if not self.multilabel:
             self.result = self.eval.classification_summary()
         else:
             self.result = self.eval.multilabel_summary()
+
